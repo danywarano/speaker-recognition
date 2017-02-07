@@ -1,0 +1,94 @@
+%feature Extraction
+function [mfccFeature]=featureExtract(r,fs)
+%[data]=getaudiodata(r);
+l=length(r);
+q=rem(l,512);
+d=l-q;
+data=r(1:d);
+for i=1:d
+    data(i)=r(i);
+end
+[normedData]=normalize(data);
+
+%[a]=silenceRemove(normedData);
+[preData]=preemphasis(normedData);
+
+[framedData,noOfFrames]=framing(preData);
+[hammData]=windowing(framedData,noOfFrames);
+
+mfccFeature=zeros(noOfFrames,13);
+
+for i = 1:noOfFrames 
+% for each frame i, make mfcc from current framed signal
+mfccFeature(i,:)= mfcc(hammData(i,:),fs);
+
+
+end
+[mfccFeature]=normalizeCeps(mfccFeature,noOfFrames);
+
+%normalize
+function [output]=normalize(input)
+maxa=abs(max(input));
+l=length(input);
+output=input;
+for i=1:l
+	output(i)=input(i)/maxa;
+	end
+
+%preemphasis
+function [output]=preemphasis(input)
+l=length(input);
+output= input;
+% apply pre-emphasis to each sample
+		for  n = 2:l
+			output(n) = input(n) - 0.95* input(n - 1);
+		end
+	
+%for framing the data
+function [output,noOfFrames]=framing(input)
+
+       %calculate no of frames, for framing
+	l=length(input);
+        noOfFrames = floor(2 * l / 512- 1);
+        output = zeros(noOfFrames,512);
+        for  i = 1:noOfFrames-1
+           startIndex = (i * 512 / 2);
+            for j = 1:255
+                output(i,j)= input(startIndex + j);
+            end
+        end
+    
+% does hamming window on each frame
+ function [output]=windowing(input,noOfFrames)   
+    output=zeros(noOfFrames,512);
+        %prepare hammingWindow
+        hammingWindow = zeros(1,512);
+        for i = 1:512
+            %the data
+            hammingWindow(i) = 0.54 - 0.46 * cos(2 * pi * i / 255); 
+           
+        end
+        % do windowing
+        for  i = 1: noOfFrames
+            for  j = 1:512
+                output(i,j) = input(i,j) * hammingWindow(j );
+            end
+        end
+    
+%ceps normalization
+function[mCeps]=normalizeCeps(mfccFeature,noOfFrames)
+mCeps=zeros(noOfFrames,13);
+%1.loop through each mfcc coeff
+for  i = 1:13
+    %calculate mean
+    for j=1:noOfFrames
+       m=mean(mfccFeature(j,i));%ith coeff of all frame
+    end
+    
+   %subtract
+    for j=1:noOfFrames
+        mCeps(j,i)=mfccFeature(j,i)-m;
+    end
+end
+
+	

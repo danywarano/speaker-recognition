@@ -1,4 +1,4 @@
-peaker Recognition system based on matlab
+Speaker Recognition system based on matlab
 Ashok Sharma Paudel
 Deepesh Lekhak
 Keshav Bashayal

@@ -6,6 +6,7 @@ Sushma shrestha
 
 Run figure Welcome in matlab.
 
+
 record-records input voice from microphone.
 stop-stop recording and save it.
 plot-plot the input signal.
